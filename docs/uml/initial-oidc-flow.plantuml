@@ -1,19 +1,20 @@
 @startuml
 actor User
 actor Browser
-actor OidcApplication
-actor OidcProvider
+actor "OIDC Application" as OidcApplication
+actor "OIDC Provider" as OidcProvider
+
 
 User -> Browser : Click on Login with OIDC
 Browser -> OidcApplication : Browser sends HTTP GET request to /oidc/authorize
-OidcApplication -> OidcApplication: Compile redirect URL to initiate browser redirect #blue
-Browser <- OidcApplication: Instructs browser to redirect to OIDC Provider #orange
-Browser -> OidcProvider: Browser prompts for OIDC login credentials #green
-User <- OidcProvider : Authenticate and Authorize #green
-User -> OidcProvider : Grant Consent #green
-OidcApplication <- OidcProvider : Send Authorization Code via HTTP GET redirect to /oidc/callback #orange
-OidcApplication -> OidcProvider : Exchange via HTTP POST Authorization Code for Access Tokens #blue
-OidcApplication <- OidcProvider : Returns Access Token, Refresh Token & ID Token #blue
-OidcApplication -> OidcApplication : Persist tokens in HTTP session #blue
+OidcApplication -[#blue]-> OidcApplication: Compile redirect URL to initiate browser redirect #blue
+Browser <-[#orange]- OidcApplication: Instructs browser to redirect to OIDC Provider #orange
+Browser -[#green]-> OidcProvider: Browser prompts for OIDC login credentials
+User <-[#green]- OidcProvider : Authenticate and Authorize
+User -[#green]-> OidcProvider : Grant Consent
+OidcApplication <-[#orange]- OidcProvider : Send Authorization Code via HTTP GET redirect to /oidc/callback
+OidcApplication -[#blue]-> OidcProvider : Exchange via HTTP POST Authorization Code for Access Tokens
+OidcApplication <-[#blue]- OidcProvider : Returns Access Token, Refresh Token & ID Token
+OidcApplication -[#blue]-> OidcApplication : Persist tokens in HTTP session
 Browser <- OidcApplication : Issues HTTP session cookie to browser
 @enduml
