@@ -1,8 +1,8 @@
 package com.acme;
 
-import com.acme.jersey.OidcApplication;
-import com.acme.jersey.APIServerApplication;
-import com.acme.listener.WebSessionListener;
+import com.acme.jakarta.OidcApplication;
+import com.acme.jakarta.ApiServerApplication;
+import com.acme.jakarta.listener.WebSessionListener;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.session.SessionHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -36,7 +36,7 @@ public class EmbeddedJetty {
 
         // Add Jersey Application
         ServletHolder jerseyServlet = new ServletHolder(ServletContainer.class);
-        jerseyServlet.setInitParameter("jakarta.ws.rs.Application", APIServerApplication.class.getName());
+        jerseyServlet.setInitParameter("jakarta.ws.rs.Application", ApiServerApplication.class.getName());
         context.addServlet(jerseyServlet, "/api/*");
         jerseyServlet.setInitOrder(0); // Ensure this servlet is initialized at startup
 
