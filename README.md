@@ -11,4 +11,5 @@
 
 ## OIDC Flows
 
-![Initial OIDC Flow](docs/uml/initial-oidc-flow.plantuml)
+### Initial OIDC Flow
+![Initial OIDC Flow](https://raw.githubusercontent.com/jeanbritz/keycloak-playground/refs/heads/main/docs/uml/initial-oidc-flow.plantuml)
