@@ -7,8 +7,8 @@ actor "OIDC Provider" as OidcProvider
 
 User -> Browser : Click on Login with OIDC
 Browser -> OidcApplication : Browser sends HTTP GET request to /oidc/authorize
-OidcApplication -[#blue]-> OidcApplication: Compile redirect URL to initiate browser redirect #blue
-Browser <-[#orange]- OidcApplication: Instructs browser to redirect to OIDC Provider #orange
+OidcApplication -[#blue]-> OidcApplication: Compile redirect URL to initiate browser redirect
+Browser <-[#orange]- OidcApplication: Instructs browser to redirect to OIDC Provider
 Browser -[#green]-> OidcProvider: Browser prompts for OIDC login credentials
 User <-[#green]- OidcProvider : Authenticate and Authorize
 User -[#green]-> OidcProvider : Grant Consent
