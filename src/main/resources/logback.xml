@@ -1,0 +1,18 @@
+<configuration>
+
+    <!-- Suppress debug logs from org.eclipse.jetty -->
+    <logger name="org.eclipse.jetty" level="INFO" />
+
+    <!-- Configure the root logger at the desired level -->
+    <root level="DEBUG">
+        <appender-ref ref="CONSOLE" />
+    </root>
+
+    <!-- Example of a console appender -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+</configuration>

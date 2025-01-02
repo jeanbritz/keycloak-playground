@@ -1,0 +1,19 @@
+@startuml
+actor User
+actor Browser
+actor OidcApplication
+actor OidcProvider
+
+User -> Browser : Click on Login with OIDC
+Browser -> OidcApplication : Browser sends HTTP GET request to /oidc/authorize
+OidcApplication -> OidcApplication: Compile redirect URL to initiate browser redirect #blue
+Browser <- OidcApplication: Instructs browser to redirect to OIDC Provider #orange
+Browser -> OidcProvider: Browser prompts for OIDC login credentials #green
+User <- OidcProvider : Authenticate and Authorize #green
+User -> OidcProvider : Grant Consent #green
+OidcApplication <- OidcProvider : Send Authorization Code via HTTP GET redirect to /oidc/callback #orange
+OidcApplication -> OidcProvider : Exchange via HTTP POST Authorization Code for Access Tokens #blue
+OidcApplication <- OidcProvider : Returns Access Token, Refresh Token & ID Token #blue
+OidcApplication -> OidcApplication : Persist tokens in HTTP session #blue
+Browser <- OidcApplication : Issues HTTP session cookie to browser
+@enduml
