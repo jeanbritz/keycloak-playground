@@ -11,52 +11,65 @@ import org.glassfish.jersey.servlet.ServletContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.InetSocketAddress;
+
 public class EmbeddedJetty {
 
     private static final Logger logger = LoggerFactory.getLogger(EmbeddedJetty.class);
 
     public static void main(String[] args) {
-
-        Server server = new Server(8080);
+        InetSocketAddress addr = null;
+        String hostname = null;
+        int port = -1;
+        try {
+            hostname = Config.getProperty(Config.Key.SERVER_HOSTNAME);
+            port = Config.getIntProperty(Config.Key.SERVER_PORT);
+            addr = InetSocketAddress.createUnresolved(hostname, port);
+        } catch (Exception e) {
+            logger.error("unable to determine given server address [{}:{}]", hostname, port, e);
+            System.exit(0);
+        }
+        Server server = new Server(addr);
 
         SessionHandler sessionHandler = new SessionHandler();
         sessionHandler.setHttpOnly(true); // Enable HttpOnly for cookies
         sessionHandler.setSecureRequestOnly(false); // Set to true to require HTTPS
         sessionHandler.getSessionCookieConfig().setName(Config.getProperty(Config.Key.SESSION_COOKIE_NAME)); // Custom cookie name
-        sessionHandler.getSessionCookieConfig().setPath("/"); // Cookie path
+        sessionHandler.getSessionCookieConfig().setPath(Config.getProperty(Config.Key.SERVER_BASE_CONTEXT)); // Cookie path
         sessionHandler.getSessionCookieConfig().setDomain(""); // Optional: set domain
         sessionHandler.getSessionCookieConfig().setMaxAge(3600); // Cookie lifespan in seconds
 
         // Set up a context handler
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
-        context.setContextPath("/"); // Root context
+        context.setContextPath(Config.getProperty(Config.Key.SERVER_BASE_CONTEXT)); // Root context
         context.setSessionHandler(sessionHandler);
         server.setHandler(context);
 
 
         // Add Jersey Application
-        ServletHolder jerseyServlet = new ServletHolder(ServletContainer.class);
-        jerseyServlet.setInitParameter("jakarta.ws.rs.Application", ApiServerApplication.class.getName());
-        context.addServlet(jerseyServlet, "/api/*");
-        jerseyServlet.setInitOrder(0); // Ensure this servlet is initialized at startup
+        ServletHolder apiServlet = new ServletHolder(ServletContainer.class);
+        apiServlet.setInitParameter("jakarta.ws.rs.Application", ApiServerApplication.class.getName());
+        apiServlet.setInitParameter("jersey.config.server.wadl.disableWadl", "true");
+        context.addServlet(apiServlet, "/api/*");
+        apiServlet.setInitOrder(0); // Ensure this servlet is initialized at startup
 
-        // Add a servlet
+        // Add OIDC Application
         ServletHolder oidcServlet = new ServletHolder(ServletContainer.class);
         oidcServlet.setInitParameter("jakarta.ws.rs.Application", OidcApplication.class.getName());
-        context.addServlet(oidcServlet, "/*");
-        oidcServlet.setInitOrder(0); // Ensure this servlet is initialized at startup
-//        context.addFilter(CorsResponseFilter.class.getName(), "/*", EnumSet.of(DispatcherType.REQUEST));
+        oidcServlet.setInitParameter("jersey.config.server.wadl.disableWadl", "true");
+        context.addServlet(oidcServlet, "/oidc/*");
+
         context.addEventListener(new WebSessionListener());
-        // Start the server
+
         try {
+            // Start the server
             server.start();
-            logger.info("Server started at http://localhost:8080/");
+            logger.info("Server started at {}", server.getURI());
             server.join();
         } catch (Exception e) {
             logger.error("error occurred while starting up server", e);
         }
 
 
-        // Wait for the server to stop
     }
 }

@@ -25,6 +25,7 @@ import com.nimbusds.openid.connect.sdk.LogoutRequest;
 import com.nimbusds.openid.connect.sdk.UserInfoRequest;
 import com.nimbusds.openid.connect.sdk.UserInfoResponse;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
+import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.inject.Inject;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -44,7 +45,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-@Path("/oidc")
+@Path("/")
+@Hidden
 public class OidcResource {
 
     private static final Logger logger = LoggerFactory.getLogger(OidcResource.class);

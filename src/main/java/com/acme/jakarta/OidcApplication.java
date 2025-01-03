@@ -4,11 +4,13 @@ import com.acme.jakarta.filter.CorsPreflightRequestFilter;
 import com.acme.jakarta.filter.CorsResponseFilter;
 import com.acme.jakarta.feature.AutoServiceLocatorFeature;
 import com.acme.jakarta.resource.OidcResource;
+import jakarta.ws.rs.ApplicationPath;
 import jakarta.ws.rs.core.Application;
 
 import java.util.HashSet;
 import java.util.Set;
 
+@ApplicationPath("/oidc")
 public class OidcApplication extends Application {
     @Override
     public Set<Class<?>> getClasses() {

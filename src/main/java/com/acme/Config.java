@@ -38,13 +38,16 @@ public class Config {
     }
 
     public enum Key implements K {
-
+        SERVER_HOSTNAME ("acme.server.hostname", "localhost"),
+        SERVER_PORT ("acme.server.port", 8080),
+        SERVER_BASE_CONTEXT("acme.server.base.url", "/"),
         OIDC_ISSUER_URL                         ("acme.oidc.issuer.url", null),
         OIDC_CLIENT_ID                          ("acme.oidc.client.id",               null),
         OIDC_CLIENT_SECRET                      ("acme.oidc.client.secret", null),
         OIDC_AUTH_CALLBACK_URL                  ("acme.oidc.auth.callback.url", null),
         FRONTEND_BASE_URL                       ("acme.frontend.base.url", "http://localhost:3000"),
-        SESSION_COOKIE_NAME                     ("acme.session.cookie.name", "SESSION_ID");
+        SESSION_COOKIE_NAME                     ("acme.session.cookie.name", "SESSION_ID"),
+        SWAGGER_ENABLED ("acme.swagger.enabled", true);
 
         private final String propertyName;
         private final Object defaultValue;
@@ -95,6 +98,26 @@ public class Config {
             return properties.getProperty(key.getPropertyName());
         } else {
             return properties.getProperty(key.getPropertyName(), String.valueOf(key.getDefaultValue()));
+        }
+    }
+
+    public static int getIntProperty(Key key) {
+        String val = String.valueOf(getProperty(key));
+        try {
+            return Integer.parseInt(val);
+        } catch (NumberFormatException e) {
+            logger.error("error parsing config property [{}], expected integer value", key.getPropertyName(), e);
+            return -1;
+        }
+    }
+
+    public static boolean getBoolProperty(Key key) {
+        String val = String.valueOf(getProperty(key));
+        try {
+            return Boolean.parseBoolean(val);
+        } catch (NumberFormatException e) {
+            logger.error("error parsing config property [{}], expected boolean value", key.getPropertyName(), e);
+            return false;
         }
     }
 

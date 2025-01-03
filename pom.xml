@@ -15,6 +15,8 @@
         <lib.jersey.version>3.1.9</lib.jersey.version>
         <lib.logback.version>1.4.12</lib.logback.version>
         <lib.jakarta-servlet-api.version>6.1.0</lib.jakarta-servlet-api.version>
+        <lib.swagger.version>2.2.22</lib.swagger.version>
+        <lib.nimbusds.version>11.20.1</lib.nimbusds.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -28,7 +30,7 @@
         <dependency>
             <groupId>com.nimbusds</groupId>
             <artifactId>oauth2-oidc-sdk</artifactId>
-            <version>11.20.1</version>
+            <version>${lib.nimbusds.version}</version>
         </dependency>
 
         <dependency>
@@ -69,6 +71,13 @@
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-servlet</artifactId>
             <version>${lib.jetty.version}</version>
+        </dependency>
+
+        <!-- OpenAPI dependency -->
+        <dependency>
+            <groupId>io.swagger.core.v3</groupId>
+            <artifactId>swagger-jaxrs2-jakarta</artifactId>
+            <version>${lib.swagger.version}</version>
         </dependency>
 
         <dependency>

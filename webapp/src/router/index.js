@@ -1,38 +1,62 @@
 
 // Composables
 import { createRouter, createWebHistory } from 'vue-router/auto'
-import Login from "@/components/Login.vue";
-import HelloWorld from "@/components/Movies.vue";
-import UserInfo from "@/components/UserInfo.vue";
-import Tokens from "@/components/Tokens.vue";
-import Logout from "@/components/Logout.vue";
+import Login from "@/pages/Login.vue";
+import UserInfo from "@/pages/UserInfo.vue";
+import Tokens from "@/pages/Tokens.vue";
+import Logout from "@/pages/Logout.vue";
+import SwaggerUI from "@/pages/SwaggerUI.vue";
+import Movies from "@/pages/Movies.vue";
 
 function configRoutes() {
   return [
     {
       path: '/',
-      name: 'HelloWorld',
-      component: HelloWorld,
+      name: 'Movies',
+      component: Movies,
+      meta: {
+        title: 'My Movie Watchlist'
+      }
     },
     {
       path: '/userinfo',
       name: 'UserInfo',
       component: UserInfo,
+      meta: {
+        title: 'User Info'
+      }
     },
     {
       path: '/tokens',
       name: 'Tokens',
       component: Tokens,
+      meta: {
+        title: 'Tokens'
+      }
     },
     {
       path: '/logout',
       name: "Logout",
       component: Logout,
+      meta: {
+        title: 'Log out'
+      }
+    },
+    {
+      path: '/swagger-ui',
+      name: "SwaggerUI",
+      component: SwaggerUI,
+      meta: {
+        title: 'Swagger UI'
+      }
     },
     {
       path: '/login',
       name: 'Login',
       component: Login,
+      meta: {
+        title: 'Login'
+      }
     },
   ]
 }

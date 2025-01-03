@@ -50,7 +50,7 @@
           <v-list-item
             v-for="(item, index) in items"
             :key="index"
-            :to="item.location"
+            :to="item.path"
             link
           >
             <v-list-item-title>{{ item.title }}</v-list-item-title>
@@ -68,18 +68,25 @@
 
 
 <script>
+import router from "@/router/index.js";
+
 export default {
   data() {
     return {
       drawer: false, // Tracks whether the drawer is open or closed
-      items: [
-        { title: "Home", location: "/" },
-        { title: "User Info", location: "/userinfo" },
-        { title: "Tokens", location: "/tokens"},
-        { title: "Log out", location: "/logout"}
-      ],
+      items: this.navItems(),
     };
   },
+  methods: {
+    navItems() {
+     return router.options.routes
+        .filter(route => route.meta && route.meta.title) // Only include routes with metadata
+        .map(route => ({
+          title: route.meta.title,
+          path: route.path,
+        }))
+    }
+  }
 };
 </script>
 

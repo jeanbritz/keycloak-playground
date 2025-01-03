@@ -3,6 +3,9 @@
     <!-- Suppress debug logs from org.eclipse.jetty -->
     <logger name="org.eclipse.jetty" level="INFO" />
 
+    <!-- Suppress debug logs from io.swagger -->
+    <logger name="io.swagger" level="INFO" />
+
     <!-- Configure the root logger at the desired level -->
     <root level="DEBUG">
         <appender-ref ref="CONSOLE" />
