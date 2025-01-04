@@ -17,7 +17,6 @@ import jakarta.ws.rs.core.UriInfo;
 import jakarta.ws.rs.core.HttpHeaders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.Marker;
 
 @Path("/openapi.{type:json|yaml}")
 public class OpenApiResource extends BaseOpenApiResource {

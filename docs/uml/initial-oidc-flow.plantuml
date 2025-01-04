@@ -1,20 +1,20 @@
 @startuml
 actor User
-actor Browser
+actor UserAgent as "User Agent"
 actor "OIDC Application" as OidcApplication
 actor "OIDC Provider" as OidcProvider
 
 
-User -> Browser : Click on Login with OIDC
-Browser -> OidcApplication : Browser sends HTTP GET request to /oidc/authorize
-OidcApplication -[#blue]-> OidcApplication: Compile redirect URL to initiate browser redirect
-Browser <-[#orange]- OidcApplication: Instructs browser to redirect to OIDC Provider
-Browser -[#green]-> OidcProvider: Browser prompts for OIDC login credentials
+User -> UserAgent : Click on Login with OIDC
+UserAgent -> OidcApplication : User Agent sends HTTP GET request to /oidc/authorize
+OidcApplication -[#blue]-> OidcApplication: Compile redirect URL to initiate User Agent redirect
+UserAgent <-[#orange]- OidcApplication: Instructs User Agent to redirect to OIDC Provider
+UserAgent -[#green]-> OidcProvider: User Agent prompts for OIDC login credentials
 User <-[#green]- OidcProvider : Authenticate and Authorize
 User -[#green]-> OidcProvider : Grant Consent
 OidcApplication <-[#orange]- OidcProvider : Send Authorization Code via HTTP GET redirect to /oidc/callback
 OidcApplication -[#blue]-> OidcProvider : Exchange via HTTP POST Authorization Code for Access Tokens
 OidcApplication <-[#blue]- OidcProvider : Returns Access Token, Refresh Token & ID Token
 OidcApplication -[#blue]-> OidcApplication : Persist tokens in HTTP session
-Browser <- OidcApplication : Issues HTTP session cookie to browser
+UserAgent <- OidcApplication : Issues HTTP session cookie to User Agent
 @enduml

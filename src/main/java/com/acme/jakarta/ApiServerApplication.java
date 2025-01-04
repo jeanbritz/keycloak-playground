@@ -1,15 +1,16 @@
 package com.acme.jakarta;
 
 import com.acme.Config;
+import com.acme.jakarta.feature.RolesAllowedDynamicFeature;
 import com.acme.jakarta.filter.CorsPreflightRequestFilter;
 import com.acme.jakarta.filter.CorsResponseFilter;
-import com.acme.jakarta.filter.OAuthAuthorizationFilter;
+import com.acme.jakarta.filter.UserAgentSessionFilter;
 import com.acme.jakarta.resource.MovieResource;
 import com.acme.jakarta.feature.AutoServiceLocatorFeature;
 import com.acme.jakarta.resource.OpenApiResource;
 import jakarta.ws.rs.ApplicationPath;
 import jakarta.ws.rs.core.Application;
-import org.glassfish.jersey.server.filter.RolesAllowedDynamicFeature;
+
 
 import java.util.HashSet;
 import java.util.Set;
@@ -27,10 +28,11 @@ public class ApiServerApplication extends Application {
         // Features
         classes.add(AutoServiceLocatorFeature.class);
         classes.add(RolesAllowedDynamicFeature.class);
+
         // Filters
         classes.add(CorsPreflightRequestFilter.class);
         classes.add(CorsResponseFilter.class);
-        classes.add(OAuthAuthorizationFilter.class);
+        classes.add(UserAgentSessionFilter.class);
 
 
         return classes;

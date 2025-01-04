@@ -17,6 +17,7 @@
         <lib.jakarta-servlet-api.version>6.1.0</lib.jakarta-servlet-api.version>
         <lib.swagger.version>2.2.22</lib.swagger.version>
         <lib.nimbusds.version>11.20.1</lib.nimbusds.version>
+        <lib.yauaa.version>7.29.0</lib.yauaa.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -80,10 +81,38 @@
             <version>${lib.swagger.version}</version>
         </dependency>
 
+        <!-- Browser profiling dependency -->
+        <dependency>
+            <groupId>nl.basjes.parse.useragent</groupId>
+            <artifactId>yauaa</artifactId>
+            <version>${lib.yauaa.version}</version>
+        </dependency>
+
+        <!-- Logging dependencies -->
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>${lib.logback.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-to-slf4j</artifactId>
+            <version>2.20.0</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- User Agent analyzing dependencies -->
+        <dependency>
+            <groupId>nl.basjes.parse.useragent</groupId>
+            <artifactId>yauaa</artifactId>
+            <version>${lib.yauaa.version}</version>
+            <exclusions>
+                <!-- Exclude the direct log4j-core if pulled in transitively -->
+                <exclusion>
+                    <groupId>org.apache.logging.log4j</groupId>
+                    <artifactId>log4j-core</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
 
