@@ -8,15 +8,22 @@ import com.nimbusds.jose.proc.BadJOSEException;
 import com.nimbusds.jwt.JWTParser;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.Issuer;
+import com.nimbusds.oauth2.sdk.id.State;
 import com.nimbusds.openid.connect.sdk.Nonce;
 import com.nimbusds.openid.connect.sdk.validators.IDTokenValidator;
 import jakarta.inject.Inject;
 import org.jvnet.hk2.annotations.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.text.ParseException;
 
+import static com.acme.log.Markers.SECURITY_MARKER;
+
 @Service
 public class OidcValidatorServiceImpl implements OidcValidatorService {
+
+    private static final Logger logger = LoggerFactory.getLogger(OidcValidatorServiceImpl.class);
 
     private final OidcConfig oidcConfig;
 
@@ -27,8 +34,26 @@ public class OidcValidatorServiceImpl implements OidcValidatorService {
 
     @Override
     public boolean isValidIssuer(String issuer) {
-        Issuer actualIssuer = new Issuer(issuer);
-        return oidcConfig.metadata().getIssuer().equals(actualIssuer);
+        Issuer expected = oidcConfig.metadata().getIssuer();
+        Issuer actual = new Issuer(issuer);
+        boolean result = expected.equals(actual);
+        if (!result) {
+            logger.warn(SECURITY_MARKER, "Incoming request contains different issuer than expected [expected: {}, actual: {}]",
+                    expected, actual);
+        }
+        return result;
+    }
+
+    @Override
+    public boolean isValidState(String initialState, String nextState) {
+        State initial = new State(initialState);
+        State next = new State(nextState);
+        boolean result = initial.equals(next);
+        if(!result) {
+            logger.warn(SECURITY_MARKER, "Incoming request contains mismatch between state values, possible CSRF attack [expected: {}, actual: {}]",
+                    initial, next);
+        }
+        return result;
     }
 
     @Override

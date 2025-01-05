@@ -1,9 +1,12 @@
 package com.acme.jakarta;
 
+import com.acme.hk2.binder.RoleMapperBinder;
 import com.acme.jakarta.filter.CorsPreflightRequestFilter;
 import com.acme.jakarta.filter.CorsResponseFilter;
 import com.acme.jakarta.feature.AutoServiceLocatorFeature;
+import com.acme.jakarta.filter.UserAgentSessionFilter;
 import com.acme.jakarta.resource.oidc.OidcResource;
+import com.acme.jersey.monitoring.JerseyApplicationEventListener;
 import jakarta.ws.rs.ApplicationPath;
 import jakarta.ws.rs.core.Application;
 
@@ -14,11 +17,23 @@ import java.util.Set;
 public class OidcApplication extends Application {
     @Override
     public Set<Class<?>> getClasses() {
-        Set<Class<?>> resources = new HashSet<>();
-        resources.add(OidcResource.class);
-        resources.add(AutoServiceLocatorFeature.class);
-        resources.add(CorsResponseFilter.class);
-        resources.add(CorsPreflightRequestFilter.class);
-        return resources;
+        Set<Class<?>> classes = new HashSet<>();
+        // Resources
+        classes.add(OidcResource.class);
+        // Features
+        classes.add(AutoServiceLocatorFeature.class);
+
+        // Binders
+        classes.add(RoleMapperBinder.class);
+
+        // Filters
+        classes.add(CorsResponseFilter.class);
+        classes.add(CorsPreflightRequestFilter.class);
+        classes.add(UserAgentSessionFilter.class);
+        // Listener
+        classes.add(JerseyApplicationEventListener.class);
+        return classes;
     }
+
+
 }

@@ -1,5 +1,6 @@
 package com.acme;
 
+import com.acme.log.LogbackConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,6 +21,7 @@ public class Config {
     static {
         INSTANCE = new Config();
         INSTANCE.init();
+        LogbackConfig.setup(getProperty(Key.LOG_LEVEL));
     }
 
     public interface K {
@@ -38,9 +40,11 @@ public class Config {
     }
 
     public enum Key implements K {
+        LOG_LEVEL ("acme.log.level", "DEBUG"),
         SERVER_HOSTNAME ("acme.server.hostname", "localhost"),
         SERVER_PORT ("acme.server.port", 8080),
-        SERVER_BASE_CONTEXT("acme.server.base.url", "/"),
+        SERVER_BASE_CONTEXT("acme.server.base.context", "/"),
+        OIDC_PROVIDER_NAME ("acme.oidc.provider.name", "keycloak"),
         OIDC_ISSUER_URL                         ("acme.oidc.issuer.url", null),
         OIDC_CLIENT_ID                          ("acme.oidc.client.id",               null),
         OIDC_CLIENT_SECRET                      ("acme.oidc.client.secret", null),
@@ -126,7 +130,7 @@ public class Config {
         try {
             return (System.getenv(envVariable)).trim();
         } catch (SecurityException e) {
-            logger.warn("A security exception prevented access to the environment variable. Using defaults.");
+            logger.warn("A security exception prevented access to the environment variable [{}]. Using defaults.", envVariable);
         } catch (NullPointerException e) {
             // Do nothing. The key was not specified in an environment variable. Continue along.
         }

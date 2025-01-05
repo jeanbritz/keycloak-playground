@@ -1,9 +1,9 @@
-package com.acme.hk2.service;
+package com.acme.hk2.mapper;
 
 import com.acme.Config;
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTClaimsSet;
-import com.nimbusds.jwt.SignedJWT;
+import jakarta.inject.Named;
 import org.jvnet.hk2.annotations.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,7 +13,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-@Service
+
 public class KeycloakRoleMapper implements RoleMapper {
 
     private static final Logger logger = LoggerFactory.getLogger(KeycloakRoleMapper.class);

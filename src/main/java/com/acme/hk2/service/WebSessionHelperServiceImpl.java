@@ -18,7 +18,7 @@ public class WebSessionHelperServiceImpl implements WebSessionHelperService {
     @Override
     public NewCookie createSessionCookie(int maxAge) {
         return new NewCookie.Builder(Config.getProperty(Config.Key.SESSION_COOKIE_NAME))
-                .path("/")
+                .path(Config.getProperty(Config.Key.SERVER_BASE_CONTEXT))
                 .maxAge(maxAge)
                 .httpOnly(true)
                 .build();
@@ -26,8 +26,7 @@ public class WebSessionHelperServiceImpl implements WebSessionHelperService {
 
     @Override
     public HttpSession createNewSession(HttpServletRequest request) {
-        HttpSession newSession = request.getSession(true);
-        logger.debug("creating new web session [session id: {}]", newSession.getId());
+        logger.debug("Creating new web session");
         return request.getSession(true);
     }
 
@@ -35,10 +34,10 @@ public class WebSessionHelperServiceImpl implements WebSessionHelperService {
     public HttpSession getExistingSession(HttpServletRequest request) {
         HttpSession existingSession = request.getSession(false);
         if (existingSession != null) {
-            logger.debug("getting existing web session [session id: {}]", existingSession.getId());
+            logger.debug("Retrieving existing web session [id:{}]", existingSession.getId());
         } else {
             // No valid session associated with the HTTP request
-            logger.warn("unable to get existing session");
+            logger.warn("Unable to retrieve active session");
         }
         return existingSession;
     }
@@ -65,7 +64,7 @@ public class WebSessionHelperServiceImpl implements WebSessionHelperService {
             try {
                 oldSession.invalidate();
             } catch (IllegalStateException e) {
-                logger.warn("existing session already invalid, session id: {}", oldSession.getId());
+                logger.warn("Existing session already invalid, session id: {}", oldSession.getId());
             }
         } else {
             newSession = request.getSession(true);

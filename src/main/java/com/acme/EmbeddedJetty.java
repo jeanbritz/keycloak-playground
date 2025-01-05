@@ -3,6 +3,7 @@ package com.acme;
 import com.acme.jakarta.OidcApplication;
 import com.acme.jakarta.ApiServerApplication;
 import com.acme.jakarta.listener.WebSessionListener;
+import com.acme.log.LogbackConfig;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.session.SessionHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -26,7 +27,7 @@ public class EmbeddedJetty {
             port = Config.getIntProperty(Config.Key.SERVER_PORT);
             addr = InetSocketAddress.createUnresolved(hostname, port);
         } catch (Exception e) {
-            logger.error("unable to determine given server address [{}:{}]", hostname, port, e);
+            logger.error("Unable to resolve given server address [{}:{}]", hostname, port, e);
             System.exit(0);
         }
         Server server = new Server(addr);
@@ -58,6 +59,7 @@ public class EmbeddedJetty {
         oidcServlet.setInitParameter("jakarta.ws.rs.Application", OidcApplication.class.getName());
         oidcServlet.setInitParameter("jersey.config.server.wadl.disableWadl", "true");
         context.addServlet(oidcServlet, "/oidc/*");
+        oidcServlet.setInitOrder(0); // Ensure this servlet is initialized at startup
 
         context.addEventListener(new WebSessionListener());
 

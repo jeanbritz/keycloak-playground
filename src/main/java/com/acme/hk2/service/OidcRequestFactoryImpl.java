@@ -1,6 +1,8 @@
 package com.acme.hk2.service;
 
 import com.acme.Config;
+import com.acme.util.IdGenerator;
+import com.acme.util.SecureRandomGenerator;
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
@@ -13,9 +15,11 @@ import com.nimbusds.oauth2.sdk.auth.ClientSecretBasic;
 import com.nimbusds.oauth2.sdk.auth.ClientSecretPost;
 import com.nimbusds.oauth2.sdk.auth.Secret;
 import com.nimbusds.oauth2.sdk.id.ClientID;
+import com.nimbusds.oauth2.sdk.id.State;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.RefreshToken;
 import com.nimbusds.openid.connect.sdk.LogoutRequest;
+import com.nimbusds.openid.connect.sdk.Nonce;
 import com.nimbusds.openid.connect.sdk.UserInfoRequest;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.UriBuilder;
@@ -25,6 +29,8 @@ import java.net.URI;
 
 @Service
 public class OidcRequestFactoryImpl implements OidcRequestFactory {
+
+    private final IdGenerator<String> randomGenerator = new SecureRandomGenerator();
 
     private final OidcConfig oidcConfig;
 
@@ -61,19 +67,29 @@ public class OidcRequestFactoryImpl implements OidcRequestFactory {
     }
 
     @Override
-    public URI newAuthorizeRequest(String state, String nonce) {
+    public URI newAuthorizeRequest(State state, Nonce nonce) {
         return UriBuilder.fromUri(this.oidcConfig.metadata().getAuthorizationEndpointURI())
                 .queryParam("client_id", Config.getProperty(Config.Key.OIDC_CLIENT_ID))
                 .queryParam("redirect_uri", Config.getProperty(Config.Key.OIDC_AUTH_CALLBACK_URL))
                 .queryParam("response_type", "code")
                 .queryParam("scope", "openid")
-                .queryParam("state", state)
-                .queryParam("nonce", nonce)
+                .queryParam("state", state.getValue())
+                .queryParam("nonce", nonce.getValue())
                 .build();
     }
 
     @Override
     public UserInfoRequest newUserInfoRequest(AccessToken accessToken) {
         return new UserInfoRequest(oidcConfig.metadata().getUserInfoEndpointURI(), accessToken);
+    }
+
+    @Override
+    public State nextState() {
+        return new State(randomGenerator.next());
+    }
+
+    @Override
+    public Nonce nextNonce() {
+        return new Nonce(randomGenerator.next());
     }
 }

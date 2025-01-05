@@ -1,6 +1,8 @@
 package com.acme.jakarta.resource.api;
 
 import com.acme.hk2.service.MovieService;
+import com.acme.jakarta.annotation.UserPrincipal;
+import com.acme.jakarta.security.OAuthSecurityContext;
 import com.acme.movie.MovieRequest;
 import com.acme.movie.Movie;
 import io.swagger.v3.oas.annotations.Operation;
@@ -22,11 +24,14 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.SecurityContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.security.Principal;
 import java.util.List;
 
 
@@ -52,8 +57,8 @@ public class MovieResource {
             @ApiResponse(responseCode = "401", description = "Unauthorized"),
             @ApiResponse(responseCode = "403", description = "Not allowed to create movie")
     })
-    public Response createMovie(@Valid MovieRequest request) {
-        logger.debug("Incoming request to create movie");
+    public Response createMovie(@UserPrincipal Principal principal, @Valid MovieRequest request) {
+        logger.debug("Incoming request to create movie from {}", principal.getName());
         Movie created = service.createMovie(request.getTitle(), request.getDirector(), request.getYear());
 
         return Response.status(Response.Status.CREATED).entity(created).build();
@@ -70,8 +75,8 @@ public class MovieResource {
             @ApiResponse(responseCode = "403", description = "Not allowed to view movies"),
             @ApiResponse(responseCode = "404", description = "No movies found", content = @Content(schema = @Schema(implementation = ApiError.class)))
     })
-    public Response getAllMovies(@QueryParam("watched") Boolean watched) {
-        logger.debug("Incoming request to view movie(s)");
+    public Response getAllMovies(@UserPrincipal Principal principal, @QueryParam("watched") Boolean watched) {
+        logger.debug("Incoming request to view movie(s) from {}", principal.getName());
         List<Movie> result;
         // Optional query param for filtering by watched status
         if (watched != null) {
@@ -100,8 +105,8 @@ public class MovieResource {
             @ApiResponse(responseCode = "403", description = "Not allowed to view movie"),
             @ApiResponse(responseCode = "404", description = "Movie not found", content = @Content(schema = @Schema(implementation = ApiError.class)))
     })
-    public Response getMovieById(@PathParam("id") String id) {
-        logger.debug("Incoming request to view movie");
+    public Response getMovieById(@UserPrincipal Principal principal, @PathParam("id") String id) {
+        logger.debug("Incoming request to view movie from {}", principal);
         Movie movie = service.getById(id);
         if (movie == null) {
             ApiError apiError = new ApiError("Missing requirements");
@@ -126,8 +131,8 @@ public class MovieResource {
             @ApiResponse(responseCode = "403", description = "Not allowed to update movie"),
             @ApiResponse(responseCode = "404", description = "Movie not found", content = @Content(schema = @Schema(implementation = ApiError.class))),
     })
-    public Response updateMovie(@PathParam("id") String id, @Valid MovieRequest updatedMovie) {
-        logger.debug("Incoming request to update movie");
+    public Response updateMovie(@UserPrincipal Principal principal, @PathParam("id") String id, @Valid MovieRequest updatedMovie) {
+        logger.debug("Incoming request to update movie from {}", principal.getName());
         Movie movie = service.update(id, updatedMovie.getTitle(), updatedMovie.getDirector(), updatedMovie.getYear());
         if (movie == null) {
             ApiError apiError = new ApiError("Missing requirements");
@@ -151,8 +156,8 @@ public class MovieResource {
             @ApiResponse(responseCode = "403", description = "Not allowed to update movie's statue"),
             @ApiResponse(responseCode = "404", description = "Movie not found", content = @Content(schema = @Schema(implementation = ApiError.class)))
     })
-    public Response updateStatus(@PathParam("id") String id, @QueryParam("status") boolean status) {
-        logger.debug("Incoming request to update movie status");
+    public Response updateStatus(@UserPrincipal Principal principal, @PathParam("id") String id, @QueryParam("status") boolean status) {
+        logger.debug("Incoming request to update movie status from {}", principal.getName());
         Movie movie = service.updateStatus(id, status);
         if(movie == null) {
             ApiError apiError = new ApiError("Missing requirements");
@@ -174,8 +179,8 @@ public class MovieResource {
             @ApiResponse(responseCode = "403", description = "Not allowed to delete movie"),
             @ApiResponse(responseCode = "404", description = "Movie not found", content = @Content(schema = @Schema(implementation = ApiError.class)))
     })
-    public Response deleteMovie(@PathParam("id") String id) {
-        logger.debug("Incoming request to delete movie");
+    public Response deleteMovie(@UserPrincipal Principal principal, @PathParam("id") String id) {
+        logger.debug("Incoming request to delete movie from {}", principal.getName());
         boolean removed = service.delete(id);
         if (!removed) {
             ApiError apiError = new ApiError("Missing requirements");

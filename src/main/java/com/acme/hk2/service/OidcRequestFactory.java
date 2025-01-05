@@ -5,6 +5,8 @@ import com.nimbusds.oauth2.sdk.TokenRequest;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.RefreshToken;
 import com.nimbusds.openid.connect.sdk.LogoutRequest;
+import com.nimbusds.openid.connect.sdk.Nonce;
+import com.nimbusds.oauth2.sdk.id.State;
 import com.nimbusds.openid.connect.sdk.UserInfoRequest;
 import org.jvnet.hk2.annotations.Contract;
 
@@ -19,9 +21,12 @@ public interface OidcRequestFactory {
 
     LogoutRequest newLogoutRequest(JWT idToken);
 
-    URI newAuthorizeRequest(String state, String nonce);
+    URI newAuthorizeRequest(State state, Nonce nonce);
 
     UserInfoRequest newUserInfoRequest(AccessToken accessToken);
 
+    State nextState();
+
+    Nonce nextNonce();
 
 }

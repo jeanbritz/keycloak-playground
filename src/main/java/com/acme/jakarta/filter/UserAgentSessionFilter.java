@@ -1,9 +1,8 @@
 package com.acme.jakarta.filter;
 
 import com.acme.Config;
-import com.acme.hk2.service.RoleMapper;
+import com.acme.hk2.mapper.RoleMapper;
 import com.acme.hk2.service.UserAgentAnalyzer;
-import com.acme.jakarta.security.AnonymousSecurityContext;
 import com.acme.jakarta.security.SecurityEnforcedFilter;
 import com.acme.jakarta.security.OAuthSecurityContext;
 import com.acme.oidc.SessionAttrs;
@@ -44,8 +43,6 @@ public class UserAgentSessionFilter extends SecurityEnforcedFilter {
     @Context
     private HttpServletRequest request;
 
-    private SecurityContext newSecurityContext;
-
     @Override
     public SecurityContext doFilter(ContainerRequestContext containerRequest) {
         UserAgent ua = analyzer.parse((ContainerRequest) containerRequest);
@@ -78,10 +75,13 @@ public class UserAgentSessionFilter extends SecurityEnforcedFilter {
             try {
                 List<String> roles;
                 OIDCTokens tokens = (OIDCTokens) session.getAttribute(SessionAttrs.OIDC_TOKENS);
-                AccessToken accessToken = tokens.getAccessToken();
-                SignedJWT signedAccessToken = SignedJWT.parse(accessToken.getValue());
-                roles = roleMapper.map(signedAccessToken);
-                return new OAuthSecurityContext(originalContext, signedAccessToken, roles);
+                if (tokens != null) {
+                    AccessToken accessToken = tokens.getAccessToken();
+                    SignedJWT signedAccessToken = SignedJWT.parse(accessToken.getValue());
+                    roles = roleMapper.map(signedAccessToken);
+                    return new OAuthSecurityContext(originalContext, signedAccessToken, roles);
+                }
+                return null;
             } catch (Exception e) {
                 logger.warn(SECURITY_MARKER, "Error occurred while authorizing user [session id: {}]", session.getId(), e);
             }
