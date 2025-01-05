@@ -5,9 +5,9 @@ import com.acme.jakarta.feature.RolesAllowedDynamicFeature;
 import com.acme.jakarta.filter.CorsPreflightRequestFilter;
 import com.acme.jakarta.filter.CorsResponseFilter;
 import com.acme.jakarta.filter.UserAgentSessionFilter;
-import com.acme.jakarta.resource.MovieResource;
+import com.acme.jakarta.resource.api.MovieResource;
 import com.acme.jakarta.feature.AutoServiceLocatorFeature;
-import com.acme.jakarta.resource.OpenApiResource;
+import com.acme.jakarta.resource.api.OpenApiResource;
 import jakarta.ws.rs.ApplicationPath;
 import jakarta.ws.rs.core.Application;
 

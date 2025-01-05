@@ -1,7 +1,9 @@
 package com.acme.hk2.service;
 
+import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MultivaluedHashMap;
 import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.Request;
 import nl.basjes.parse.useragent.UserAgent;
 import org.eclipse.jetty.server.Authentication;
 import org.glassfish.jersey.server.ContainerRequest;
@@ -24,7 +26,7 @@ public class UserAgentAnalyzerImpl implements UserAgentAnalyzer {
     }
 
     @Override
-    public UserAgent parse(ContainerRequest request) {
+    public UserAgent parse(HttpHeaders request) {
         Map<String, String> headers = new HashMap<>();
         MultivaluedMap<String, String> containerHeaders = request.getRequestHeaders();
         for(Map.Entry<String, List<String>> header : containerHeaders.entrySet()) {

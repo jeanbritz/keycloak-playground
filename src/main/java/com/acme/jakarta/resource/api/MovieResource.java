@@ -1,4 +1,4 @@
-package com.acme.jakarta.resource;
+package com.acme.jakarta.resource.api;
 
 import com.acme.hk2.service.MovieService;
 import com.acme.movie.MovieRequest;
@@ -48,10 +48,12 @@ public class MovieResource {
             @ApiResponse(responseCode = "201", description = "Movie created successfully",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = Movie.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid input data")
+            @ApiResponse(responseCode = "400", description = "Invalid input data"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Not allowed to create movie")
     })
     public Response createMovie(@Valid MovieRequest request) {
-        logger.debug("incoming request to create movie");
+        logger.debug("Incoming request to create movie");
         Movie created = service.createMovie(request.getTitle(), request.getDirector(), request.getYear());
 
         return Response.status(Response.Status.CREATED).entity(created).build();
@@ -64,19 +66,24 @@ public class MovieResource {
             @ApiResponse(responseCode = "200", description = "Movies retrieved successfully",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = Movie.class))),
-            @ApiResponse(responseCode = "404", description = "No movies found")
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Not allowed to view movies"),
+            @ApiResponse(responseCode = "404", description = "No movies found", content = @Content(schema = @Schema(implementation = ApiError.class)))
     })
     public Response getAllMovies(@QueryParam("watched") Boolean watched) {
-        // Optional query param for filtering by watched status
-        logger.debug("incoming request to view movie(s)");
+        logger.debug("Incoming request to view movie(s)");
         List<Movie> result;
+        // Optional query param for filtering by watched status
         if (watched != null) {
             result = service.getByStatus(watched);
         } else {
             result = service.getAll();
         }
         if(result.isEmpty()) {
-            return Response.status(Response.Status.NOT_FOUND).build();
+            ApiError apiError = new ApiError("No movie(s) found, given the criteria");
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(apiError)
+                    .build();
         }
         return Response.ok(result).build();
     }
@@ -89,13 +96,19 @@ public class MovieResource {
             @ApiResponse(responseCode = "200", description = "Movie retrieved successfully",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = Movie.class))),
-            @ApiResponse(responseCode = "404", description = "Movie not found")
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Not allowed to view movie"),
+            @ApiResponse(responseCode = "404", description = "Movie not found", content = @Content(schema = @Schema(implementation = ApiError.class)))
     })
     public Response getMovieById(@PathParam("id") String id) {
-        logger.debug("incoming request to view movie");
+        logger.debug("Incoming request to view movie");
         Movie movie = service.getById(id);
         if (movie == null) {
-            return Response.status(Response.Status.NOT_FOUND).build();
+            ApiError apiError = new ApiError("Missing requirements");
+            apiError.addDetail(new ApiError.ApiErrorMessage("id", "Movie not found"));
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(apiError)
+                    .build();
         }
         return Response.ok(movie).build();
     }
@@ -109,14 +122,18 @@ public class MovieResource {
             @ApiResponse(responseCode = "200", description = "Movie updated successfully",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = Movie.class))),
-            @ApiResponse(responseCode = "404", description = "Movie not found")
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Not allowed to update movie"),
+            @ApiResponse(responseCode = "404", description = "Movie not found", content = @Content(schema = @Schema(implementation = ApiError.class))),
     })
     public Response updateMovie(@PathParam("id") String id, @Valid MovieRequest updatedMovie) {
-        logger.debug("incoming request to update movie");
+        logger.debug("Incoming request to update movie");
         Movie movie = service.update(id, updatedMovie.getTitle(), updatedMovie.getDirector(), updatedMovie.getYear());
         if (movie == null) {
+            ApiError apiError = new ApiError("Missing requirements");
+            apiError.addDetail(new ApiError.ApiErrorMessage("id", "Movie not found"));
             return Response.status(Response.Status.NOT_FOUND)
-                    .entity("Movie not found.")
+                    .entity(apiError)
                     .build();
         }
         return Response.ok(movie).build();
@@ -130,14 +147,18 @@ public class MovieResource {
             @ApiResponse(responseCode = "200", description = "Status updated successfully",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = Movie.class))),
-            @ApiResponse(responseCode = "404", description = "Movie not found")
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Not allowed to update movie's statue"),
+            @ApiResponse(responseCode = "404", description = "Movie not found", content = @Content(schema = @Schema(implementation = ApiError.class)))
     })
     public Response updateStatus(@PathParam("id") String id, @QueryParam("status") boolean status) {
-        logger.debug("incoming request to update movie status");
+        logger.debug("Incoming request to update movie status");
         Movie movie = service.updateStatus(id, status);
         if(movie == null) {
+            ApiError apiError = new ApiError("Missing requirements");
+            apiError.addDetail(new ApiError.ApiErrorMessage("id", "Movie not found"));
             return Response.status(Response.Status.NOT_FOUND)
-                    .entity("Movie not found.")
+                    .entity(apiError)
                     .build();
         }
         return Response.ok(movie).build();
@@ -146,17 +167,21 @@ public class MovieResource {
     @DELETE
     @Path("/{id}")
     @RolesAllowed({"delete-movie"})
-    @Operation(summary = "Delete a movie", description = "Deletes a movie by its ID.", security = {@SecurityRequirement(name = "sessionCookie")})
+    @Operation(summary = "Delete a movie", description = "Deletes a movie by its ID.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Movie deleted successfully"),
-            @ApiResponse(responseCode = "404", description = "Movie not found")
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Not allowed to delete movie"),
+            @ApiResponse(responseCode = "404", description = "Movie not found", content = @Content(schema = @Schema(implementation = ApiError.class)))
     })
     public Response deleteMovie(@PathParam("id") String id) {
-        logger.debug("incoming request to delete movie");
+        logger.debug("Incoming request to delete movie");
         boolean removed = service.delete(id);
         if (!removed) {
+            ApiError apiError = new ApiError("Missing requirements");
+            apiError.addDetail(new ApiError.ApiErrorMessage("id", "Movie not found"));
             return Response.status(Response.Status.NOT_FOUND)
-                    .entity("Movie not found.")
+                    .entity(apiError)
                     .build();
         }
         return Response.status(Response.Status.NO_CONTENT).build();

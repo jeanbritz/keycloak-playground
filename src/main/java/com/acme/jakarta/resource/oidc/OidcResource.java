@@ -1,4 +1,4 @@
-package com.acme.jakarta.resource;
+package com.acme.jakarta.resource.oidc;
 
 import com.acme.Config;
 import com.acme.hk2.service.OidcConfig;
@@ -58,7 +58,7 @@ public class OidcResource {
     private OidcRequestFactory oidcRequestFactory;
 
     @Inject
-    private OidcValidatorService validator;
+    private OidcValidatorService oidcValidator;
 
     @Inject
     private WebSessionHelperService sessionHelper;
@@ -109,7 +109,7 @@ public class OidcResource {
             try {
                 httpResponse = userInforequest.toHTTPRequest().send();
             } catch (IOException e) {
-                throw new OidcUserInfoException("error occurred while performing HTTP request to obtain user info from OIDC provider", e);
+                throw new OidcUserInfoException("Error occurred while performing HTTP request to obtain user info from OIDC provider", e);
             }
 
             // Parse the response
@@ -117,7 +117,7 @@ public class OidcResource {
             try {
                 response = UserInfoResponse.parse(httpResponse);
             } catch (ParseException e) {
-                throw new OidcUserInfoException("error occurred while parsing user info received from OIDC provider", e);
+                throw new OidcUserInfoException("Error occurred while parsing user info received from OIDC provider", e);
             }
 
             if (response.indicatesSuccess()) {
@@ -209,7 +209,7 @@ public class OidcResource {
     @GET
     public Response callback(@Context HttpServletRequest request, @QueryParam("session_state") String sessionState, @QueryParam("iss") String issuer, @QueryParam("realms") String realms, @QueryParam("code") String code, @QueryParam("state") String state) throws URISyntaxException {
         // Security: Ensures the issuer came from the expected Identity Provider (IDP) and not from some malicious or unintended source.
-        if(!validator.isValidIssuer(issuer)) {
+        if(!oidcValidator.isValidIssuer(issuer)) {
             return Response.status(Response.Status.UNAUTHORIZED).build();
         }
 
@@ -241,7 +241,7 @@ public class OidcResource {
             RefreshToken refreshToken = response.toSuccessResponse().getTokens().getRefreshToken();
             String idToken = response.toSuccessResponse().getCustomParameters().get("id_token").toString();
             String nonce = String.valueOf(session.getAttribute(SessionAttrs.NONCE));
-            validator.validateIdToken(idToken, nonce);
+            oidcValidator.validateIdToken(idToken, nonce);
             OIDCTokens oidcTokens;
             try {
                 oidcTokens = OIDCTokens.parse(response.toSuccessResponse().toJSONObject());

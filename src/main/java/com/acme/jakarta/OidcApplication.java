@@ -3,7 +3,7 @@ package com.acme.jakarta;
 import com.acme.jakarta.filter.CorsPreflightRequestFilter;
 import com.acme.jakarta.filter.CorsResponseFilter;
 import com.acme.jakarta.feature.AutoServiceLocatorFeature;
-import com.acme.jakarta.resource.OidcResource;
+import com.acme.jakarta.resource.oidc.OidcResource;
 import jakarta.ws.rs.ApplicationPath;
 import jakarta.ws.rs.core.Application;
 

@@ -1,4 +1,4 @@
-package com.acme.jakarta.resource;
+package com.acme.jakarta.resource.api;
 
 import io.swagger.v3.jaxrs2.integration.resources.BaseOpenApiResource;
 import io.swagger.v3.oas.annotations.Operation;
@@ -18,6 +18,8 @@ import jakarta.ws.rs.core.HttpHeaders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.acme.log.Markers.SECURITY_MARKER;
+
 @Path("/openapi.{type:json|yaml}")
 public class OpenApiResource extends BaseOpenApiResource {
 
@@ -34,7 +36,7 @@ public class OpenApiResource extends BaseOpenApiResource {
 
     @PostConstruct
     public void init() {
-        logger.warn("[SECURITY] OpenAPI endpoint exposed at {}", uriInfo.getAbsolutePath());
+        logger.warn(SECURITY_MARKER,"OpenAPI endpoint exposed at {}", uriInfo.getAbsolutePath());
     }
 
     @GET

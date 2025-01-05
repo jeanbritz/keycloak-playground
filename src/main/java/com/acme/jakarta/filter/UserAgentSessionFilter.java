@@ -3,6 +3,8 @@ package com.acme.jakarta.filter;
 import com.acme.Config;
 import com.acme.hk2.service.RoleMapper;
 import com.acme.hk2.service.UserAgentAnalyzer;
+import com.acme.jakarta.security.AnonymousSecurityContext;
+import com.acme.jakarta.security.SecurityEnforcedFilter;
 import com.acme.jakarta.security.OAuthSecurityContext;
 import com.acme.oidc.SessionAttrs;
 import com.nimbusds.jwt.SignedJWT;
@@ -10,11 +12,11 @@ import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import jakarta.annotation.Priority;
 import jakarta.inject.Inject;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.ws.rs.Priorities;
 import jakarta.ws.rs.container.ContainerRequestContext;
-import jakarta.ws.rs.container.ContainerRequestFilter;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.SecurityContext;
 import jakarta.ws.rs.ext.Provider;
@@ -25,9 +27,11 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
+import static com.acme.log.Markers.SECURITY_MARKER;
+
 @Provider
 @Priority(Priorities.AUTHENTICATION)
-public class UserAgentSessionFilter implements ContainerRequestFilter {
+public class UserAgentSessionFilter extends SecurityEnforcedFilter {
 
     private static final Logger logger = LoggerFactory.getLogger(UserAgentSessionFilter.class);
 
@@ -40,9 +44,12 @@ public class UserAgentSessionFilter implements ContainerRequestFilter {
     @Context
     private HttpServletRequest request;
 
+    private SecurityContext newSecurityContext;
+
     @Override
-    public void filter(ContainerRequestContext containerRequest) {
+    public SecurityContext doFilter(ContainerRequestContext containerRequest) {
         UserAgent ua = analyzer.parse((ContainerRequest) containerRequest);
+        SecurityContext originalContext = containerRequest.getSecurityContext();
         logger.info("Detected User Agent [Class: {}, Name: {}, Version: {}, OS: {}]",
                 ua.get(UserAgent.AGENT_CLASS).getValue(),
                 ua.get(UserAgent.AGENT_NAME).getValue(),
@@ -52,32 +59,34 @@ public class UserAgentSessionFilter implements ContainerRequestFilter {
         String cookieHeader = containerRequest.getHeaderString("Cookie");
         HttpSession session = null;
         if (cookieHeader != null) {
-            String sessionName = Config.getProperty(Config.Key.SESSION_COOKIE_NAME);
-            String sessionCookie = cookieHeader.substring(sessionName.length() + 1);
-            if(!sessionCookie.isBlank()) {
-                logger.debug("Detected Session Cookie: [{}]", sessionCookie);
-                session = request.getSession(false);
-                if (session == null) {
-                    return;
+            String sessionCookieName = Config.getProperty(Config.Key.SESSION_COOKIE_NAME);
+            Cookie[] cookies = request.getCookies();
+            Cookie sessionCookie = null;
+            if (cookies != null) {
+                for (Cookie cookie : cookies) {
+                    if (sessionCookieName.equals(cookie.getName())) {
+                        sessionCookie = cookie;
+                        logger.debug("Detected Session Cookie: [{}]", sessionCookie.getValue());
+                    }
                 }
             }
+            if (sessionCookie != null) {
+                session = request.getSession(false);
+            }
         }
-        if(session != null) {
+        if (session != null) {
             try {
                 List<String> roles;
                 OIDCTokens tokens = (OIDCTokens) session.getAttribute(SessionAttrs.OIDC_TOKENS);
                 AccessToken accessToken = tokens.getAccessToken();
-
                 SignedJWT signedAccessToken = SignedJWT.parse(accessToken.getValue());
                 roles = roleMapper.map(signedAccessToken);
-                SecurityContext originalContext = containerRequest.getSecurityContext();
-                OAuthSecurityContext oAuthContext = new OAuthSecurityContext(originalContext, signedAccessToken.getJWTClaimsSet().getSubject(), roles);
-                containerRequest.setSecurityContext(oAuthContext);
-
+                return new OAuthSecurityContext(originalContext, signedAccessToken, roles);
             } catch (Exception e) {
-                logger.warn("error occurred while authorizing user [session id: {}]", session.getId(), e);
+                logger.warn(SECURITY_MARKER, "Error occurred while authorizing user [session id: {}]", session.getId(), e);
             }
         }
-
+        return null;
     }
+
 }
