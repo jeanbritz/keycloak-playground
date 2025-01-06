@@ -4,7 +4,6 @@
     :items="movies"
   >
     <template #top>
-
       <v-toolbar
         flat
       >
@@ -26,7 +25,7 @@
               dark
               v-bind="props"
             >
-              New Item
+              New Movie
             </v-btn>
           </template>
           <v-card>
@@ -43,7 +42,7 @@
                     sm="6"
                   >
                     <v-text-field
-                      v-model="editedItem.name"
+                      v-model="editedItem.title"
                       label="Title"
                     />
                   </v-col>
@@ -67,7 +66,6 @@
                       label="Year"
                     />
                   </v-col>
-
                 </v-row>
               </v-container>
             </v-card-text>
@@ -130,18 +128,34 @@
         mdi-pencil
       </v-icon>
       <v-icon
+        class="me-2"
         size="small"
         @click="deleteItem(item)"
       >
         mdi-delete
       </v-icon>
+      <v-tooltip
+        text="I have seen this"
+        location="top"
+      >
+        <template #activator="{ props }">
+          <v-icon
+            class="me-2"
+            size="small"
+            :v-bind="props"
+            @click="setWatched(item.id)"
+          >
+            mdi-eye-check
+          </v-icon>
+        </template>
+      </v-tooltip>
     </template>
     <template #no-data>
       <v-btn
         color="primary"
         @click="initialize"
       >
-        Reset
+        Refresh
       </v-btn>
     </template>
   </v-data-table>
@@ -208,7 +222,6 @@ export default {
       axiosInstance.get('/api/movies')
         .then(response => {
           this.movies = response.data;
-          console.log(response.data);
         })
         .catch((error) => {
             console.error(error);
@@ -228,7 +241,8 @@ export default {
     },
 
     deleteItemConfirm () {
-      this.movies.splice(this.editedIndex, 1)
+      // this.movies.splice(this.editedIndex, 1)
+      this.deleteMovie(this.editedItem.id);
       this.closeDelete()
     },
 
@@ -248,13 +262,88 @@ export default {
       })
     },
 
+    setWatched(id) {
+      const axiosInstance = axios.create({
+        baseURL: 'http://localhost:8080',
+        withCredentials: true
+      })
+      axiosInstance.put(`/api/movies/${id}/status?watched=true`)
+        .then(response => {
+          if (response.status === 200) {
+            this.initialize();
+          }
+        })
+        .catch((error) => {
+          console.error(error);
+        })
+    },
+
     save () {
       if (this.editedIndex > -1) {
-        Object.assign(this.movies[this.editedIndex], this.editedItem)
+        this.updateMovie(this.editedItem['id'], this.editedItem);
       } else {
-        this.movies.push(this.editedItem)
+        this.createMovie(this.editedItem)
       }
       this.close()
+    },
+
+    createMovie(item) {
+      const axiosInstance = axios.create({
+        baseURL: 'http://localhost:8080',
+        withCredentials: true
+      })
+      const movie = {
+        title: item.title,
+        director: item.director,
+        year: item.year,
+      }
+      axiosInstance.post('/api/movies', movie)
+        .then(response => {
+          if (response.status === 201) {
+            this.initialize();
+          }
+        })
+        .catch((error) => {
+          console.error(error);
+        })
+    },
+
+    updateMovie(id, item) {
+      console.log('updateMovie, id', item);
+      const axiosInstance = axios.create({
+        baseURL: 'http://localhost:8080',
+        withCredentials: true
+      })
+      const movie = {
+        title: item.title,
+        director: item.director,
+        year: item.year,
+      }
+      axiosInstance.put(`/api/movies/${id}`, movie)
+        .then(response => {
+          if (response.status === 200) {
+            this.initialize();
+          }
+        })
+        .catch((error) => {
+          console.error(error);
+        })
+    },
+
+    deleteMovie(id) {
+      const axiosInstance = axios.create({
+        baseURL: 'http://localhost:8080',
+        withCredentials: true
+      })
+      axiosInstance.delete(`/api/movies/${id}`)
+        .then(response => {
+          if (response.status === 204) {
+            this.initialize();
+          }
+        })
+        .catch((error) => {
+          console.error(error);
+        })
     },
   },
 }

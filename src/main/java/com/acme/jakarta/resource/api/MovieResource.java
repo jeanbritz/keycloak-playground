@@ -145,7 +145,7 @@ public class MovieResource {
     }
 
     @PUT
-    @Path("/{id}")
+    @Path("/{id}/status")
     @RolesAllowed({"update-movie"})
     @Operation(summary = "Update movie status", description = "Updates the watched status of a movie.", security = {@SecurityRequirement(name = "sessionCookie")})
     @ApiResponses(value = {
@@ -156,9 +156,9 @@ public class MovieResource {
             @ApiResponse(responseCode = "403", description = "Not allowed to update movie's statue"),
             @ApiResponse(responseCode = "404", description = "Movie not found", content = @Content(schema = @Schema(implementation = ApiError.class)))
     })
-    public Response updateStatus(@UserPrincipal Principal principal, @PathParam("id") String id, @QueryParam("status") boolean status) {
+    public Response updateStatus(@UserPrincipal Principal principal, @PathParam("id") String id, @QueryParam("watched") boolean watched) {
         logger.debug("Incoming request to update movie status from {}", principal.getName());
-        Movie movie = service.updateStatus(id, status);
+        Movie movie = service.updateStatus(id, watched);
         if(movie == null) {
             ApiError apiError = new ApiError("Missing requirements");
             apiError.addDetail(new ApiError.ApiErrorMessage("id", "Movie not found"));

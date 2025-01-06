@@ -17,7 +17,7 @@ public class CorsResponseFilter implements ContainerResponseFilter {
     private final Logger logger = LoggerFactory.getLogger(CorsResponseFilter.class);
 
     private static final String CORS_ALLOW_ORIGIN = Config.getProperty(Config.Key.FRONTEND_BASE_URL);
-    private static final String CORS_ALLOW_METHODS = "OPTIONS, GET, POST";
+    private static final String CORS_ALLOW_METHODS = "OPTIONS, GET, POST, PUT, DELETE";
     private static final String CORS_ALLOW_HEADERS = "Content-Type";
     private static final String CORS_EXPOSE_HEADERS = "Content-Type";
 
