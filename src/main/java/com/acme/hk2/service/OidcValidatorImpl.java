@@ -1,7 +1,7 @@
 package com.acme.hk2.service;
 
 import com.acme.Config;
-import com.acme.hk2.service.exception.InvalidTokenException;
+import com.acme.jakarta.resource.exception.InvalidTokenException;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.proc.BadJOSEException;
@@ -21,14 +21,14 @@ import java.text.ParseException;
 import static com.acme.log.Markers.SECURITY_MARKER;
 
 @Service
-public class OidcValidatorServiceImpl implements OidcValidatorService {
+public class OidcValidatorImpl implements OidcValidator {
 
-    private static final Logger logger = LoggerFactory.getLogger(OidcValidatorServiceImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(OidcValidatorImpl.class);
 
     private final OidcConfig oidcConfig;
 
     @Inject
-    public OidcValidatorServiceImpl(OidcConfig oidcConfig) {
+    public OidcValidatorImpl(OidcConfig oidcConfig) {
         this.oidcConfig = oidcConfig;
     }
 

@@ -1,7 +1,7 @@
 package com.acme.hk2.service;
 
 import com.acme.Config;
-import com.acme.hk2.service.exception.OidcMetadataException;
+import com.acme.jakarta.resource.exception.OidcMetadataException;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.oauth2.sdk.GeneralException;
 import com.nimbusds.oauth2.sdk.id.Issuer;

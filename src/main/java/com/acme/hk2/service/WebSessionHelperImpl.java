@@ -3,6 +3,7 @@ package com.acme.hk2.service;
 import com.acme.Config;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.NewCookie;
 import org.jvnet.hk2.annotations.Service;
 import org.slf4j.Logger;
@@ -11,9 +12,12 @@ import org.slf4j.LoggerFactory;
 import java.util.Enumeration;
 
 @Service
-public class WebSessionHelperServiceImpl implements WebSessionHelperService {
+public class WebSessionHelperImpl implements WebSessionHelper {
 
-    private static final Logger logger = LoggerFactory.getLogger(WebSessionHelperServiceImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(WebSessionHelperImpl.class);
+
+    @Context
+    private HttpServletRequest request;
 
     @Override
     public NewCookie createSessionCookie(int maxAge) {
@@ -25,25 +29,30 @@ public class WebSessionHelperServiceImpl implements WebSessionHelperService {
     }
 
     @Override
-    public HttpSession createNewSession(HttpServletRequest request) {
-        logger.debug("Creating new web session");
-        return request.getSession(true);
-    }
-
-    @Override
-    public HttpSession getExistingSession(HttpServletRequest request) {
-        HttpSession existingSession = request.getSession(false);
-        if (existingSession != null) {
-            logger.debug("Retrieving existing web session [id:{}]", existingSession.getId());
-        } else {
-            // No valid session associated with the HTTP request
-            logger.warn("Unable to retrieve active session");
+    public void end(HttpSession session) {
+        if(session != null) {
+            logger.info("Ending web session [id:{}]", session.getId());
+            try {
+                session.invalidate();
+            } catch (IllegalStateException e) {
+                logger.debug("Web session already invalid, therefore could not be ended [id:{}]", session.getId(),e);
+            }
         }
-        return existingSession;
     }
 
     @Override
-    public HttpSession renewSession(HttpServletRequest request) {
+    public HttpSession get() {
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            logger.debug("Retrieving existing valid session [id:{}]", session.getId());
+        } else {
+            logger.debug("Creating new web session");
+            session = request.getSession(true);
+        }
+        return session;
+    }
+
+    public HttpSession renew(HttpServletRequest request) {
         HttpSession oldSession = request.getSession(false);
         HttpSession newSession = null;
 

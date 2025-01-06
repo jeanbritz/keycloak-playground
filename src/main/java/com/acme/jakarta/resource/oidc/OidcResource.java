@@ -3,17 +3,18 @@ package com.acme.jakarta.resource.oidc;
 import com.acme.Config;
 import com.acme.hk2.service.OidcConfig;
 import com.acme.hk2.service.OidcRequestFactory;
-import com.acme.hk2.service.OidcValidatorService;
-import com.acme.hk2.service.WebSessionHelperService;
-import com.acme.hk2.service.exception.OidcCallbackException;
-import com.acme.hk2.service.exception.OidcLogoutException;
-import com.acme.hk2.service.exception.OidcUserInfoException;
-import com.acme.jakarta.security.OAuthSecurityContext;
+import com.acme.hk2.service.OidcValidator;
+import com.acme.hk2.service.WebSessionHelper;
+import com.acme.jakarta.resource.exception.InvalidSessionException;
+import com.acme.jakarta.resource.exception.OidcCallbackException;
+import com.acme.jakarta.resource.exception.OidcLogoutException;
+import com.acme.jakarta.resource.exception.OidcUserInfoException;
 import com.acme.oidc.SessionAttrs;
 import com.acme.oidc.TokensDto;
 import com.acme.oidc.UserInfoDto;
 import com.nimbusds.oauth2.sdk.AccessTokenResponse;
 import com.nimbusds.oauth2.sdk.ErrorObject;
+import com.nimbusds.oauth2.sdk.ErrorResponse;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.TokenRequest;
 import com.nimbusds.oauth2.sdk.TokenResponse;
@@ -29,17 +30,14 @@ import com.nimbusds.openid.connect.sdk.UserInfoResponse;
 import com.nimbusds.openid.connect.sdk.token.OIDCTokens;
 import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.inject.Inject;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
-import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.NewCookie;
 import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.core.SecurityContext;
 import jakarta.ws.rs.core.UriBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +45,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.security.Principal;
 
 @Path("/")
 @Hidden
@@ -62,17 +59,17 @@ public class OidcResource {
     private OidcRequestFactory oidcRequestFactory;
 
     @Inject
-    private OidcValidatorService oidcValidator;
+    private OidcValidator oidcValidator;
 
     @Inject
-    private WebSessionHelperService sessionHelper;
+    private WebSessionHelper sessionHelper;
 
 
 
     @Path("authorize")
     @GET
-    public Response authorize(@Context HttpServletRequest request) {
-        final HttpSession session = sessionHelper.createNewSession(request);
+    public Response authorize() {
+        final HttpSession session = sessionHelper.get();
         State state = oidcRequestFactory.nextState();
         Nonce nonce = oidcRequestFactory.nextNonce();
         URI redirectUri = oidcRequestFactory.newAuthorizeRequest(state, nonce);
@@ -84,8 +81,8 @@ public class OidcResource {
     @Path("debug/tokens")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Response tokens(@Context HttpServletRequest request) {
-        final HttpSession session = sessionHelper.getExistingSession(request);
+    public Response tokens() {
+        final HttpSession session = sessionHelper.get();
         if (session != null) {
             TokensDto dto = new TokensDto();
             OIDCTokens tokens = (OIDCTokens) session.getAttribute(SessionAttrs.OIDC_TOKENS);
@@ -100,9 +97,8 @@ public class OidcResource {
     @Path("userinfo")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Response userInfo(@Context OAuthSecurityContext securityContext, @Context HttpServletRequest request) {
-        logger.debug("Security Context: {}", securityContext);
-        final HttpSession session = sessionHelper.getExistingSession(request);
+    public Response userInfo() {
+        final HttpSession session = sessionHelper.get();
         if(session != null) {
 
             OIDCTokens oidcTokens = (OIDCTokens) session.getAttribute(SessionAttrs.OIDC_TOKENS);
@@ -154,8 +150,8 @@ public class OidcResource {
                         Tokens newTokens = tokens.getTokens();
                         accessToken = newTokens.getAccessToken();
                         OIDCTokens newOIDCTokens = new OIDCTokens(newTokens.getAccessToken(), newTokens.getRefreshToken());
-                        final HttpSession newSession = sessionHelper.renewSession(request);
-                        newSession.setAttribute(SessionAttrs.OIDC_TOKENS, newOIDCTokens);
+                        //final HttpSession newSession = sessionHelper.renew(request);
+                        //newSession.setAttribute(SessionAttrs.OIDC_TOKENS, newOIDCTokens);
 
                         final UserInfoRequest userInfoRequest = oidcRequestFactory.newUserInfoRequest(accessToken);
                         // Parse the response
@@ -188,8 +184,8 @@ public class OidcResource {
     @Path("logout")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Response logout(@Context HttpServletRequest request) {
-        HttpSession session = sessionHelper.getExistingSession(request);
+    public Response logout() {
+        HttpSession session = sessionHelper.get();
         if (session != null) {
             OIDCTokens oidcTokens = (OIDCTokens) session.getAttribute(SessionAttrs.OIDC_TOKENS);
             LogoutRequest logoutRequest = oidcRequestFactory.newLogoutRequest(oidcTokens.getIDToken());
@@ -200,8 +196,8 @@ public class OidcResource {
                 throw new OidcLogoutException("error occurred while performing HTTP request to logout on the OIDC provider", e);
             }
             if(httpResponse.indicatesSuccess()) {
-                logger.info("Invalidating session: {}", session.getId());
-                session.invalidate();
+                sessionHelper.end(session);
+                // Create Cookie with maxAge set to 0, to clear it from the User Agent's storage
                 NewCookie sessionCookie = sessionHelper.createSessionCookie(0);
                 return Response.status(Response.Status.OK).cookie(sessionCookie).build();
             } else {
@@ -214,13 +210,13 @@ public class OidcResource {
 
     @Path("callback")
     @GET
-    public Response callback(@Context HttpServletRequest request, @QueryParam("session_state") String sessionState, @QueryParam("iss") String issuer, @QueryParam("realms") String realms, @QueryParam("code") String code, @QueryParam("state") String nextState) throws URISyntaxException {
+    public Response callback(@QueryParam("session_state") String sessionState, @QueryParam("iss") String issuer, @QueryParam("realms") String realms, @QueryParam("code") String code, @QueryParam("state") String nextState) throws URISyntaxException {
 
         if(!oidcValidator.isValidIssuer(issuer)) {
-            return Response.status(Response.Status.UNAUTHORIZED).build();
+            throw new OidcCallbackException("Invalid issuer");
         }
 
-        HttpSession session = sessionHelper.getExistingSession(request);
+        HttpSession session = sessionHelper.get();
 
         if (session != null) {
             State initialState = (State) session.getAttribute(SessionAttrs.STATE);
@@ -237,11 +233,8 @@ public class OidcResource {
                 throw new OidcCallbackException("error occurred while processing token exchange from OIDC provider", e);
             }
             if (!response.indicatesSuccess()) {
-                try {
-                    throw new Exception("Token exchange failed: " + response.toErrorResponse().getErrorObject());
-                } catch (Exception e) {
-                    throw new OidcCallbackException("error occurred while processing token exchange from OIDC provider", e);
-                }
+                ErrorResponse errorResponse = response.toErrorResponse();
+               throw new OidcCallbackException("error occurred while processing token exchange from OIDC provider", errorResponse.getErrorObject());
             }
 
             AccessToken accessToken = response.toSuccessResponse().getTokens().getAccessToken();
@@ -262,7 +255,7 @@ public class OidcResource {
             URI redirectUri = UriBuilder.fromUri(Config.getProperty(Config.Key.FRONTEND_BASE_URL)).build();
             return Response.status(Response.Status.TEMPORARY_REDIRECT).location(redirectUri).build();
         }
-        return Response.status(Response.Status.UNAUTHORIZED).build();
+        throw new InvalidSessionException("unauthenticated callback request");
 
     }
 

@@ -1,10 +1,9 @@
 package com.acme.hk2.service;
 
-import com.nimbusds.openid.connect.sdk.Nonce;
 import org.jvnet.hk2.annotations.Contract;
 
 @Contract
-public interface OidcValidatorService {
+public interface OidcValidator {
 
     /**
      * Security: Ensures the issuer came from the expected Identity Provider (IDP) and not from some malicious or unintended source.

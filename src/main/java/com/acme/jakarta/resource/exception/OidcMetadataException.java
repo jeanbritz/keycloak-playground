@@ -1,4 +1,4 @@
-package com.acme.hk2.service.exception;
+package com.acme.jakarta.resource.exception;
 
 public class OidcMetadataException extends RuntimeException {
     public OidcMetadataException(String message, Exception e) {

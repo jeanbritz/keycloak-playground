@@ -8,9 +8,9 @@ import org.slf4j.LoggerFactory;
 
 import static com.acme.log.Markers.SECURITY_MARKER;
 
-public abstract class SecurityEnforcedFilter implements ContainerRequestFilter {
+public abstract class SecurityContextEnforcedFilter implements ContainerRequestFilter {
 
-    private static final Logger logger = LoggerFactory.getLogger(SecurityEnforcedFilter.class);
+    private static final Logger logger = LoggerFactory.getLogger(SecurityContextEnforcedFilter.class);
 
     protected abstract SecurityContext doFilter(ContainerRequestContext containerRequestContext);
 

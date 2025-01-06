@@ -1,4 +1,4 @@
-package com.acme.hk2.service.exception;
+package com.acme.jakarta.resource.exception;
 
 public class OidcLogoutException extends RuntimeException {
 

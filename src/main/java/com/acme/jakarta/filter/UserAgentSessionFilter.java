@@ -3,7 +3,7 @@ package com.acme.jakarta.filter;
 import com.acme.Config;
 import com.acme.hk2.mapper.RoleMapper;
 import com.acme.hk2.service.UserAgentAnalyzer;
-import com.acme.jakarta.security.SecurityEnforcedFilter;
+import com.acme.jakarta.security.SecurityContextEnforcedFilter;
 import com.acme.jakarta.security.OAuthSecurityContext;
 import com.acme.oidc.SessionAttrs;
 import com.nimbusds.jwt.SignedJWT;
@@ -17,6 +17,7 @@ import jakarta.servlet.http.HttpSession;
 import jakarta.ws.rs.Priorities;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.SecurityContext;
 import jakarta.ws.rs.ext.Provider;
 import nl.basjes.parse.useragent.UserAgent;
@@ -30,7 +31,7 @@ import static com.acme.log.Markers.SECURITY_MARKER;
 
 @Provider
 @Priority(Priorities.AUTHENTICATION)
-public class UserAgentSessionFilter extends SecurityEnforcedFilter {
+public class UserAgentSessionFilter extends SecurityContextEnforcedFilter {
 
     private static final Logger logger = LoggerFactory.getLogger(UserAgentSessionFilter.class);
 
@@ -50,10 +51,9 @@ public class UserAgentSessionFilter extends SecurityEnforcedFilter {
         logger.info("Detected User Agent [Class: {}, Name: {}, Version: {}, OS: {}]",
                 ua.get(UserAgent.AGENT_CLASS).getValue(),
                 ua.get(UserAgent.AGENT_NAME).getValue(),
-                ua.get(UserAgent.AGENT_VERSION),
+                ua.get(UserAgent.AGENT_VERSION).getValue(),
                 ua.get(UserAgent.OPERATING_SYSTEM_NAME).getValue());
-
-        String cookieHeader = containerRequest.getHeaderString("Cookie");
+        String cookieHeader = containerRequest.getHeaderString(HttpHeaders.COOKIE);
         HttpSession session = null;
         if (cookieHeader != null) {
             String sessionCookieName = Config.getProperty(Config.Key.SESSION_COOKIE_NAME);
