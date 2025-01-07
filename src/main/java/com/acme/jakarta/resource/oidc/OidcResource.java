@@ -1,7 +1,7 @@
 package com.acme.jakarta.resource.oidc;
 
 import com.acme.Config;
-import com.acme.hk2.service.OidcConfig;
+import com.acme.hk2.service.OidcProviderConfig;
 import com.acme.hk2.service.OidcRequestFactory;
 import com.acme.hk2.service.OidcValidator;
 import com.acme.hk2.service.WebSessionHelper;
@@ -53,7 +53,7 @@ public class OidcResource {
     private static final Logger logger = LoggerFactory.getLogger(OidcResource.class);
 
     @Inject
-    private OidcConfig oidcConfig;
+    private OidcProviderConfig oidcConfig;
 
     @Inject
     private OidcRequestFactory oidcRequestFactory;
@@ -69,7 +69,7 @@ public class OidcResource {
     @Path("authorize")
     @GET
     public Response authorize() {
-        final HttpSession session = sessionHelper.get();
+        final HttpSession session = sessionHelper.get(true);
         State state = oidcRequestFactory.nextState();
         Nonce nonce = oidcRequestFactory.nextNonce();
         URI redirectUri = oidcRequestFactory.newAuthorizeRequest(state, nonce);
@@ -82,7 +82,7 @@ public class OidcResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response tokens() {
-        final HttpSession session = sessionHelper.get();
+        final HttpSession session = sessionHelper.get(false);
         if (session != null) {
             TokensDto dto = new TokensDto();
             OIDCTokens tokens = (OIDCTokens) session.getAttribute(SessionAttrs.OIDC_TOKENS);
@@ -98,7 +98,7 @@ public class OidcResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response userInfo() {
-        final HttpSession session = sessionHelper.get();
+        final HttpSession session = sessionHelper.get(false);
         if(session != null) {
 
             OIDCTokens oidcTokens = (OIDCTokens) session.getAttribute(SessionAttrs.OIDC_TOKENS);
@@ -185,7 +185,7 @@ public class OidcResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response logout() {
-        HttpSession session = sessionHelper.get();
+        HttpSession session = sessionHelper.get(false);
         if (session != null) {
             OIDCTokens oidcTokens = (OIDCTokens) session.getAttribute(SessionAttrs.OIDC_TOKENS);
             LogoutRequest logoutRequest = oidcRequestFactory.newLogoutRequest(oidcTokens.getIDToken());
@@ -216,7 +216,7 @@ public class OidcResource {
             throw new OidcCallbackException("Invalid issuer");
         }
 
-        HttpSession session = sessionHelper.get();
+        HttpSession session = sessionHelper.get(false);
 
         if (session != null) {
             State initialState = (State) session.getAttribute(SessionAttrs.STATE);

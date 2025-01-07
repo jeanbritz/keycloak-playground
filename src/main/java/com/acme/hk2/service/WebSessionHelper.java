@@ -11,6 +11,6 @@ public interface WebSessionHelper {
 
     void end(HttpSession session);
 
-    HttpSession get();
+    HttpSession get(boolean autoRenew);
 
 }

@@ -4,6 +4,7 @@ import com.acme.jakarta.OidcApplication;
 import com.acme.jakarta.ApiServerApplication;
 import com.acme.jakarta.listener.WebSessionListener;
 import com.acme.log.LogbackConfig;
+import org.eclipse.jetty.http.HttpCookie;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.session.SessionHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -37,8 +38,10 @@ public class EmbeddedJetty {
         sessionHandler.setSecureRequestOnly(false); // Set to true to require HTTPS
         sessionHandler.getSessionCookieConfig().setName(Config.getProperty(Config.Key.SESSION_COOKIE_NAME)); // Custom cookie name
         sessionHandler.getSessionCookieConfig().setPath(Config.getProperty(Config.Key.SERVER_BASE_CONTEXT)); // Cookie path
-        sessionHandler.getSessionCookieConfig().setDomain(""); // Optional: set domain
-        sessionHandler.getSessionCookieConfig().setMaxAge(3600); // Cookie lifespan in seconds
+        sessionHandler.getSessionCookieConfig().setDomain(""); // Optional: set domain, maybe the same as the hostname?
+        sessionHandler.getSessionCookieConfig().setMaxAge(-1); // Cookie lifespan set live as long as the browser session
+        sessionHandler.setSameSite(HttpCookie.SameSite.LAX);
+        sessionHandler.setMaxInactiveInterval(24 * 60 * 60);
 
         // Set up a context handler
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);

@@ -41,13 +41,15 @@ public class WebSessionHelperImpl implements WebSessionHelper {
     }
 
     @Override
-    public HttpSession get() {
+    public HttpSession get(boolean autoRenew) {
         HttpSession session = request.getSession(false);
         if (session != null) {
             logger.debug("Retrieving existing valid session [id:{}]", session.getId());
         } else {
-            logger.debug("Creating new web session");
-            session = request.getSession(true);
+            if(autoRenew) {
+                logger.debug("Creating new web session");
+                session = request.getSession(true);
+            }
         }
         return session;
     }

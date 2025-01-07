@@ -25,10 +25,10 @@ public class OidcValidatorImpl implements OidcValidator {
 
     private static final Logger logger = LoggerFactory.getLogger(OidcValidatorImpl.class);
 
-    private final OidcConfig oidcConfig;
+    private final OidcProviderConfig oidcConfig;
 
     @Inject
-    public OidcValidatorImpl(OidcConfig oidcConfig) {
+    public OidcValidatorImpl(OidcProviderConfig oidcConfig) {
         this.oidcConfig = oidcConfig;
     }
 

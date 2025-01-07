@@ -5,7 +5,7 @@ import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
 import org.jvnet.hk2.annotations.Contract;
 
 @Contract
-public interface OidcConfig {
+public interface OidcProviderConfig {
 
     void refresh();
 

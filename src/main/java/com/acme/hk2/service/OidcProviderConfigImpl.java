@@ -17,9 +17,9 @@ import java.util.concurrent.locks.ReentrantLock;
 
 
 @Service
-public class OidcConfigImpl implements OidcConfig {
+public class OidcProviderConfigImpl implements OidcProviderConfig {
 
-    private static final Logger logger = LoggerFactory.getLogger(OidcConfigImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(OidcProviderConfigImpl.class);
     private final long CACHE_TTL_SECONDS = 3600; // Cache Time-to-Live (1 hour)
     private OIDCProviderMetadata cachedMetadata;
     private JWKSet jwkSet;
@@ -33,6 +33,7 @@ public class OidcConfigImpl implements OidcConfig {
         Issuer issuer = new Issuer(issuerURL);
         try {
             lock.lock();
+            // https://datatracker.ietf.org/doc/html/rfc8414#section-3.1
             cachedMetadata = OIDCProviderMetadata.resolve(issuer);
             jwkSet = JWKSet.load(cachedMetadata.getJWKSetURI().toURL());
         } catch (GeneralException | IOException | ParseException e) {

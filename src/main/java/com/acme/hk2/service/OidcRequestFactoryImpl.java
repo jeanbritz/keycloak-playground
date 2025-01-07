@@ -32,10 +32,10 @@ public class OidcRequestFactoryImpl implements OidcRequestFactory {
 
     private final IdGenerator<String> randomGenerator = new SecureRandomGenerator();
 
-    private final OidcConfig oidcConfig;
+    private final OidcProviderConfig oidcConfig;
 
     @Inject
-    public OidcRequestFactoryImpl(OidcConfig oidcConfig) {
+    public OidcRequestFactoryImpl(OidcProviderConfig oidcConfig) {
         this.oidcConfig = oidcConfig;
     }
 
